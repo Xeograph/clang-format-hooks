@@ -277,7 +277,7 @@ fi
 readonly patch=$(mktemp)
 trap '{ rm -f "$patch"; }' EXIT
 "$apply_format" --style="$style" --cached "${apply_format_opts[@]}" > "$patch" || \
-    error_exit $'\nThe apply-format script failed.'
+     echo -e -n "$b\nThe apply-format script failed. Skipping all changes.\n$n" >&2
 
 if [ "$(wc -l < "$patch")" -eq 0 ]; then
     echo "The staged content is formatted correctly."
@@ -343,7 +343,6 @@ fi
 
 echo "You can:"
 echo " ${bold_apply}[a]: Apply the fix${recommend_apply}${n}"
-echo " ${bold_force}[f]: Force and commit anyway${recommend_force}${n}"
 echo " [c]: Cancel the commit"
 echo " [?]: Show help"
 echo
@@ -351,7 +350,7 @@ echo
 readonly tty=${PRE_COMMIT_HOOK_TTY:-/dev/tty}
 
 while true; do
-    echo -n "What would you like to do? [a/f/c/?] "
+    echo -n "What would you like to do? [a/c/?] "
     read -r answer < "$tty"
     case "$answer" in
 
@@ -378,18 +377,6 @@ while true; do
             fi
             ;;
 
-        [fF] )
-            echo
-            if ! $this_is_a_merge; then
-                echo "Will commit anyway!"
-                echo "You can always abort by quitting your editor with no commit message."
-                echo
-                echo -n "Press return to continue."
-                read -r < "$tty"
-            fi
-            exit 0
-            ;;
-
         [cC] )
             error_exit "Commit aborted as requested."
             ;;
@@ -402,7 +389,7 @@ while true; do
             ;;
 
         * )
-            echo 'Invalid answer. Type "a", "f" or "c".'
+            echo 'Invalid answer. Type "a" or "c".'
             echo
             continue
 
